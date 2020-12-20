@@ -10,7 +10,7 @@ $ pip install -r requirements.txt
 ```
 # Step 2: Download!
 ```
-$ python scholarly_api.py <SCHOLAR_ID>
+$ python xCited.py <SCHOLAR_ID>
 ```
 The downloaded PDFs will be saved in the format:
 ```

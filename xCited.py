@@ -4,10 +4,10 @@ import unicodedata
 import re
 import argparse
 
-from scholarly import scholarly
+from scholarly import scholarly, ProxyGenerator
 from tqdm import tqdm
 import urllib.request
-from urllib.error import HTTPError
+from urllib.error import HTTPError, URLError
 
 
 def args_parser():
@@ -68,19 +68,29 @@ def create_directory(path):
 
 
 def download_file(download_url, filename, ext='.pdf'):
+    """
+    Notes:
+    ------
+    - Error 403: https://stackoverflow.com/questions/16627227/http-error-403-in-python-3-web-scraping
+    - Timeout: https://requests.readthedocs.io/en/master/user/quickstart/#timeouts
+    """
+    # Useful
     # https://stackoverflow.com/questions/16627227/http-error-403-in-python-3-web-scraping
     req = urllib.request.Request(download_url, headers={'User-Agent': 'Mozilla/5.0'})
     try:
-        response = urllib.request.urlopen(req)
+        response = urllib.request.urlopen(req, timeout=10)  # 10 seconds
         file = open(filename + ext, 'wb')
         file.write(response.read())
         file.close()
     except HTTPError as e:
         return e.code
+    except URLError:
+        # print(f"Timeout for: {download_url}")
+        return 408
     return 200
 
 
-def retrieve_publications_by_author_id(author_id):
+def retrieve_publications_by_author_id(author_id, max_num_pubs=None):
     """
     Notes:
     ------
@@ -92,7 +102,7 @@ def retrieve_publications_by_author_id(author_id):
         sys.exit(f"Error in fetching author info. Please check the inserted Google Scholar ID: '{author_id}'")
     author = scholarly.fill(search_query)
     empty_pubs = author['publications']
-    num_pubs = len(empty_pubs)
+    num_pubs = max_num_pubs if max_num_pubs else len(empty_pubs)
     filled_pubs = []
 
     print("\n# Author info:")
@@ -119,11 +129,15 @@ def download_publications_pdf(author_id, filled_pubs):
     create_directory(path)
 
     print(f"\n# Download PDF ({num_eprinted}/{len(filled_pubs)} available)")
+    downloaded_pubs = 0
     for pub in tqdm(eprinted_pubs, file=sys.stdout):
-        filename = f"{pub['bib']['pub_year']}_{pub['bib']['title']}"
+        filename = f"{pub['bib']['pub_year']}_{pub['bib']['title']}" if 'bib' in pub.keys() else f"{pub['bib']['title']}"
         filename = slugify(filename)
         filename = os.path.join(path, filename)
-        download_file(pub['eprint_url'], filename)
+        status = download_file(pub['eprint_url'], filename)
+        if status == 200:
+            downloaded_pubs += 1
+    print(f"\n# Successfully downloaded {downloaded_pubs} out of {num_eprinted} PDFs")
 
     return eprinted_pubs
 
@@ -131,8 +145,16 @@ def download_publications_pdf(author_id, filled_pubs):
 def main():
     args = args_parser()
     author_id = args.scholar_id
+
+    print("\n# Generating Proxy")
+    pg = ProxyGenerator()
+    pg.FreeProxies()
+    scholarly.use_proxy(pg)
+
+    print("\n# Processing author info")
     filled_pubs = retrieve_publications_by_author_id(author_id)
     eprinted_pubs = download_publications_pdf(author_id, filled_pubs)
+    exit(0)
 
 
 if __name__ == '__main__':

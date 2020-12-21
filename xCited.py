@@ -104,15 +104,13 @@ def retrieve_publications_by_author_id(author_id, max_num_pubs=None):
     empty_pubs = author['publications']
     num_pubs = max_num_pubs if max_num_pubs else len(empty_pubs)
     filled_pubs = []
+    keys_blacklisted = ['publications', 'coauthors', 'source', 'container_type', 'filled']
 
     print("\n# Author info:")
-    print("\t- {:15s}: {}".format('Scholar ID', author['scholar_id']))
-    print("\t- {:15s}: {}".format('name', author['name']))
-    print("\t- {:15s}: {}".format('affiliation', author['affiliation']))
+    for key, value in author.items():
+        if key not in keys_blacklisted:
+            print("\t- {:15s}: {}".format(key, value))
     print("\t- {:15s}: {}".format('publications', num_pubs))
-    print("\t- {:15s}: {}".format('citations', author['citedby']))
-    print("\t- {:15s}: {}".format('h-index', author['hindex']))
-    print("\t- {:15s}: {}".format('i10-index', author['i10index']))
 
     print(f"\n# Download all publications info")
     for i in tqdm(range(num_pubs), file=sys.stdout):
@@ -131,7 +129,7 @@ def download_publications_pdf(author_id, filled_pubs):
     print(f"\n# Download PDF ({num_eprinted}/{len(filled_pubs)} available)")
     downloaded_pubs = 0
     for pub in tqdm(eprinted_pubs, file=sys.stdout):
-        filename = f"{pub['bib']['pub_year']}_{pub['bib']['title']}" if 'bib' in pub.keys() else f"{pub['bib']['title']}"
+        filename = f"{pub['bib']['pub_year']}_{pub['bib']['title']}" if 'pub_year' in pub['bib'].keys() else f"{pub['bib']['title']}"
         filename = slugify(filename)
         filename = os.path.join(path, filename)
         status = download_file(pub['eprint_url'], filename)

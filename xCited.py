@@ -3,6 +3,7 @@ import os
 import unicodedata
 import re
 import argparse
+import time
 
 from scholarly import scholarly, ProxyGenerator
 from tqdm import tqdm
@@ -129,7 +130,8 @@ def download_publications_pdf(author_id, filled_pubs):
     print(f"\n# Download PDF ({num_eprinted}/{len(filled_pubs)} available)")
     downloaded_pubs = 0
     for pub in tqdm(eprinted_pubs, file=sys.stdout):
-        filename = f"{pub['bib']['pub_year']}_{pub['bib']['title']}" if 'pub_year' in pub['bib'].keys() else f"{pub['bib']['title']}"
+        filename = f"{pub['bib']['pub_year']}_{pub['bib']['title']}" if 'pub_year' in pub[
+            'bib'].keys() else f"{pub['bib']['title']}"
         filename = slugify(filename)
         filename = os.path.join(path, filename)
         status = download_file(pub['eprint_url'], filename)
@@ -145,9 +147,17 @@ def main():
     author_id = args.scholar_id
 
     print("\n# Generating Proxy")
+    t1 = time.time()
     pg = ProxyGenerator()
     pg.FreeProxies()
     scholarly.use_proxy(pg)
+    t2 = time.time()
+
+    print("\t- {:15s}: {:.2f} sec".format("Elapsed time:", t2 - t1))
+
+    proxy_info = pg._session.proxies
+    for key, value in proxy_info.items():
+        print("\t- {:15s}: {}".format(key, value))
 
     print("\n# Processing author info")
     filled_pubs = retrieve_publications_by_author_id(author_id)

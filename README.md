@@ -12,8 +12,8 @@ $ pip install -r requirements.txt
 The Google Scholar ID is a `string` of **12 characters** corresponding to the value of the `user` field in the URL of your Google Scholar profile.
 
 > ***Example***: 
-> If your Google Scholar profile URL is: 
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *ht<span>tps://scholar.google.it/citations?user=**VVrumKsAAAAJ**&hl=en</span>*
+> If your Google Scholar profile URL is: <br/>
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *ht<span>tps://scholar.google.it/citations?user=**VVrumKsAAAAJ**&hl=en</span>* <br/>
 > then your Google Scholar ID is **VVrumKsAAAAJ**
 
 # Step 3: Download!

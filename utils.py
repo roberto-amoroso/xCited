@@ -3,7 +3,6 @@ import sys
 import unicodedata
 import re
 from console_manager import console, error_style, main_style, list_elem_symbol
-from rich.markdown import Markdown
 
 
 def query_yes_no(question, default="yes"):

@@ -1,4 +1,3 @@
-import codecs
 import sys
 import os
 import re
@@ -7,9 +6,6 @@ import time
 
 from scholarly import scholarly, ProxyGenerator
 from rich.markdown import Markdown
-import click
-import rich
-from rich.console import Console
 
 from tqdm import tqdm
 import urllib.request
@@ -20,7 +16,7 @@ from utils import create_directory, slugify, query_yes_no
 
 
 class ErrorFetchingAuthor(Exception):
-    """Raise for my specific kind of exception"""
+    """Raise when errors occur while downloading author information"""
 
 
 def scholar_id_type(arg_value):
@@ -157,18 +153,28 @@ def proxy_manager():
 
 def main():
     try:
+        # - Console setup
         console_output_setup()
+
+        # - Arguments parsing
         args = args_parser()
         author_id = args.scholar_id
 
+        # - Starting xCited program
         console.print(Markdown("# Welcome to xCited!"), style=main_style)
 
+        # - Proxy manager
         proxy_manager()
 
+        # - Retrieve author information
         filled_pubs = retrieve_publications_by_author_id(author_id)
+
+        # - Download the PDFs of the author's publications
         eprinted_pubs = download_publications_pdf(author_id, filled_pubs)
     except (KeyboardInterrupt, ErrorFetchingAuthor):
         pass
+
+    # - Closing xCited
     console.print("\n", Markdown("\n# Closing xCited"), style=main_style)
     sys.exit()
 

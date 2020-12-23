@@ -18,7 +18,7 @@ The Google Scholar ID is a `string` of **12 characters** corresponding to the va
 
 # Step 3: Download!
 ```
-$ python scholarly_api.py <SCHOLAR_ID>
+$ python xCited.py <SCHOLAR_ID>
 ```
 The downloaded PDFs will be saved in the format:
 ```

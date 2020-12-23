@@ -22,5 +22,5 @@ $ python xCited.py <SCHOLAR_ID>
 ```
 The downloaded PDFs will be saved in the format:
 ```
-'./<scholar_id>/<year_publication>_<title_publication>.pdf'
+'./<SCHOLAR_ID>/<year_publication>_<title_publication>.pdf'
 ```

@@ -13,8 +13,8 @@ The Google Scholar ID is a `string` of **12 characters** corresponding to the va
 
 > ***Example***: 
 > If your Google Scholar profile URL is: <br/>
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *ht<span>tps://scholar.google.it/citations?user=**VVrumKsAAAAJ**&hl=en</span>* <br/>
-> then your Google Scholar ID is **VVrumKsAAAAJ**
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *ht<span>tps://scholar.google.it/citations?user=**VVrumKsAJEJE**&hl=en</span>* <br/>
+> then your Google Scholar ID is **VVrumKsAJEJE**
 
 # Step 3: Download!
 ```

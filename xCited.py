@@ -1,14 +1,34 @@
+import codecs
 import sys
 import os
-import unicodedata
 import re
 import argparse
 import time
 
 from scholarly import scholarly, ProxyGenerator
+from rich.markdown import Markdown
+import click
+import rich
+from rich.console import Console
+
 from tqdm import tqdm
 import urllib.request
 from urllib.error import HTTPError, URLError
+
+from console_manager import console_output_setup, console, main_style, error_style, list_elem_symbol
+from utils import create_directory, slugify, query_yes_no
+
+
+class ErrorFetchingAuthor(Exception):
+    """Raise for my specific kind of exception"""
+
+
+def scholar_id_type(arg_value):
+    pattern = r"[\w-]{12}"
+    if not re.match(pattern, arg_value):
+        raise argparse.ArgumentTypeError("The Google Scholar ID is a string of 12 characters corresponding to "
+                                         "the value of the 'user' field in the URL of your profile.")
+    return arg_value
 
 
 def args_parser():
@@ -24,48 +44,12 @@ def args_parser():
 
     parser.add_argument(
         "scholar_id",
-        type=str,
+        type=scholar_id_type,
         help="The Google Scholar ID is a string of 12 characters corresponding to \n"
              "the value of the 'user' field in the URL of your profile.\n"
     )
 
     return parser.parse_args()
-
-
-def slugify(value, allow_unicode=False):
-    """
-    Convert to ASCII if 'allow_unicode' is False. Convert spaces to hyphens.
-    Remove characters that aren't alphanumerics, underscores, or hyphens.
-    Convert to lowercase. Also strip leading and trailing whitespace.
-
-    Notes:
-    ------
-    - From Django documentation: https://docs.djangoproject.com/en/3.0/_modules/django/utils/text/#slugify
-    """
-    value = str(value)
-    if allow_unicode:
-        value = unicodedata.normalize('NFKC', value)
-    else:
-        value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore').decode('ascii')
-    value = re.sub(r'[^\w\s-]', '', value).strip().lower()
-    return re.sub(r'[-\s]+', '-', value)
-
-
-def create_directory(path):
-    """
-    Create directory at the given path, checking for errors and if the directory
-    already exists.
-    """
-    path = os.path.realpath(path)
-    if not os.path.exists(path):
-        try:
-            os.makedirs(path)
-        except Exception as e:
-            print(f"The syntax of the output file name, directory or volume is incorrect: {path}")
-        else:
-            print('\n# Created the output directory "{}"'.format(path))
-    else:
-        print('\n# The output directory "{}" already exists'.format(path))
 
 
 def download_file(download_url, filename, ext='.pdf'):
@@ -86,7 +70,7 @@ def download_file(download_url, filename, ext='.pdf'):
     except HTTPError as e:
         return e.code
     except URLError:
-        # print(f"Timeout for: {download_url}")
+        # console.print(f"Timeout for: {download_url}")
         return 408
     return 200
 
@@ -97,23 +81,28 @@ def retrieve_publications_by_author_id(author_id, max_num_pubs=None):
     ------
     https://github.com/scholarly-python-package/scholarly
     """
-    try:
-        search_query = scholarly.search_author_id(author_id)
-    except Exception as e:
-        sys.exit(f"Error in fetching author info. Please check the inserted Google Scholar ID: '{author_id}'")
-    author = scholarly.fill(search_query)
-    empty_pubs = author['publications']
-    num_pubs = max_num_pubs if max_num_pubs else len(empty_pubs)
-    filled_pubs = []
-    keys_blacklisted = ['publications', 'coauthors', 'source', 'container_type', 'filled']
+    console.print("\n", Markdown("\n# Processing Author info"), style=main_style)
+    with console.status("[bold green]Downloading author info...") as status:  # spinner='material'
+        try:
+            search_query = scholarly.search_author_id(author_id)
+        except Exception as e:
+            console.print(
+                f"\nError in fetching author info. Please check the inserted Google Scholar ID: '{author_id}'\n",
+                style=error_style)
+            raise ErrorFetchingAuthor
+        author = scholarly.fill(search_query)
+        empty_pubs = author['publications']
+        num_pubs = max_num_pubs if max_num_pubs else len(empty_pubs)
+        filled_pubs = []
+        keys_blacklisted = ['publications', 'coauthors', 'source', 'container_type', 'filled']
 
-    print("\n# Author info:")
+    # console.print("\n", Markdown("\n# Author info:"), style=main_style)
     for key, value in author.items():
         if key not in keys_blacklisted:
-            print("\t- {:15s}: {}".format(key, value))
-    print("\t- {:15s}: {}".format('publications', num_pubs))
+            console.print("{} {:15s}: {}".format(list_elem_symbol, key, value))
+    console.print("{} {:15s}: {}".format(list_elem_symbol, 'publications', num_pubs))
 
-    print(f"\n# Download all publications info")
+    console.print("\n", Markdown("\n# Download all publications info"), style=main_style)
     for i in tqdm(range(num_pubs), file=sys.stdout):
         filled_pubs.append(scholarly.fill(empty_pubs[i]))
 
@@ -124,10 +113,13 @@ def download_publications_pdf(author_id, filled_pubs):
     eprinted_pubs = [pub for pub in filled_pubs if 'eprint_url' in pub.keys()]
     num_eprinted = len(eprinted_pubs)
 
+    console.print("\n", Markdown(
+        f"# Download PDF{'s' if num_eprinted > 1 else ''} ({num_eprinted}/{len(filled_pubs)} available)"),
+                  style=main_style)
+
     path = os.path.join(".", author_id)
     create_directory(path)
 
-    print(f"\n# Download PDF ({num_eprinted}/{len(filled_pubs)} available)")
     downloaded_pubs = 0
     for pub in tqdm(eprinted_pubs, file=sys.stdout):
         filename = f"{pub['bib']['pub_year']}_{pub['bib']['title']}" if 'pub_year' in pub[
@@ -137,32 +129,48 @@ def download_publications_pdf(author_id, filled_pubs):
         status = download_file(pub['eprint_url'], filename)
         if status == 200:
             downloaded_pubs += 1
-    print(f"\n# Successfully downloaded {downloaded_pubs} out of {num_eprinted} PDFs")
+    console.print(Markdown(
+        f"## Successfully downloaded {downloaded_pubs} out of {num_eprinted} PDF{'s' if num_eprinted > 1 else ''}"),
+        style=main_style)
 
     return eprinted_pubs
 
 
+def proxy_manager():
+    if query_yes_no("\nDo you want to use a Proxy? ([italic underline]Recommended[/italic underline])"):
+        console.print("\n", Markdown("\n# Generating Proxy"), style=main_style)
+        with console.status("[bold green]Looking for a proxy...") as status:  # spinner='material'
+            t1 = time.time()
+            pg = ProxyGenerator()
+            pg.FreeProxies()
+            scholarly.use_proxy(pg)
+            t2 = time.time()
+
+        console.print("{} {:15s}: {:.2f} sec".format(list_elem_symbol, "Elapsed time:", t2 - t1))
+
+        proxy_info = pg._session.proxies
+        for key, value in proxy_info.items():
+            console.print("{} {:15s}: {}".format(list_elem_symbol, key, value))
+    else:
+        console.print("\n", Markdown("\n# Continue without Proxy"), style=error_style)
+
+
 def main():
-    args = args_parser()
-    author_id = args.scholar_id
+    try:
+        console_output_setup()
+        args = args_parser()
+        author_id = args.scholar_id
 
-    print("\n# Generating Proxy")
-    t1 = time.time()
-    pg = ProxyGenerator()
-    pg.FreeProxies()
-    scholarly.use_proxy(pg)
-    t2 = time.time()
+        console.print(Markdown("# Welcome to xCited!"), style=main_style)
 
-    print("\t- {:15s}: {:.2f} sec".format("Elapsed time:", t2 - t1))
+        proxy_manager()
 
-    proxy_info = pg._session.proxies
-    for key, value in proxy_info.items():
-        print("\t- {:15s}: {}".format(key, value))
-
-    print("\n# Processing author info")
-    filled_pubs = retrieve_publications_by_author_id(author_id)
-    eprinted_pubs = download_publications_pdf(author_id, filled_pubs)
-    exit(0)
+        filled_pubs = retrieve_publications_by_author_id(author_id)
+        eprinted_pubs = download_publications_pdf(author_id, filled_pubs)
+    except (KeyboardInterrupt, ErrorFetchingAuthor):
+        pass
+    console.print("\n", Markdown("\n# Closing xCited"), style=main_style)
+    sys.exit()
 
 
 if __name__ == '__main__':

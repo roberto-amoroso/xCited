@@ -1,13 +1,56 @@
+# !/usr/bin/python3
+# -*- coding: utf-8 -*-
+#########################################################
+# {License_info}
+#########################################################
+# @Created By   : Roberto Amoroso
+# @Creation Date: 12/31/2020 19:47
+# @Filename     : console_manager.py
+# @Project      : xCited
+#########################################################
+"""
+Console manager for Rich content
+"""
+#########################################################
 import sys
 
 from rich import pretty
 from colorama import init
 from rich.console import Console
+from rich.theme import Theme
+from rich.style import Style
 
-console = Console()
+from rich.progress import (
+    BarColumn,
+    DownloadColumn,
+    TextColumn,
+    TransferSpeedColumn,
+    TimeRemainingColumn,
+    Progress,
+)
 
-main_style = "bold blue"
-error_style = "bold red"
+custom_console_theme = Theme({
+    "main_style": "bold blue",
+    "error_style": "bold red",
+    "warning_style": Style(color="dark_orange3", bold=True)
+})
+
+console = Console(theme=custom_console_theme)
+
+progress = Progress(
+    TextColumn("[bold blue]{task.fields[filename]}", justify="right"),
+    BarColumn(bar_width=None),
+    "[progress.percentage]{task.percentage:>3.1f}%",
+    "•",
+    DownloadColumn(),
+    "•",
+    TransferSpeedColumn(),
+    "•",
+    TimeRemainingColumn(),
+    transient=True,
+    refresh_per_second=2
+)
+
 list_elem_symbol = "\t[bold yellow]•[/bold yellow]"
 
 

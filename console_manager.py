@@ -29,11 +29,14 @@ from rich.progress import (
     Progress,
 )
 
-custom_console_theme = Theme({
-    "main_style": "bold blue",
-    "error_style": "bold red",
-    "warning_style": Style(color="dark_orange3", bold=True)
-})
+# Colors: https://rich.readthedocs.io/en/stable/appendix/colors.html#appendix-colors
+custom_console_theme = Theme(
+    {
+        "main_style": "bold blue",
+        "error_style": "bold red",
+        "warning_style": Style(color="dark_orange3", bold=True),
+    }
+)
 
 console = Console(theme=custom_console_theme)
 
@@ -48,7 +51,7 @@ progress = Progress(
     "•",
     TimeRemainingColumn(),
     transient=True,
-    refresh_per_second=2
+    refresh_per_second=2,
 )
 
 list_elem_symbol = "\t[bold yellow]•[/bold yellow]"
@@ -61,7 +64,7 @@ def console_output_setup():
     - List of all emoji: https://www.webfx.com/tools/emoji-cheat-sheet/
     """
     # https://stackoverflow.com/questions/4374455/how-to-set-sys-stdout-encoding-in-python-3
-    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stdout.reconfigure(encoding="utf-8")
 
     # https://pypi.org/project/colorama/
     init(autoreset=True)

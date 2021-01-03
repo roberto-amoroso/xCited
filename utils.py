@@ -25,8 +25,7 @@ class ErrorFetchingAuthor(Exception):
 
 
 def positive_integer(value):
-    """ Check if the argument is a positive Integer.
-    """
+    """Check if the argument is a positive Integer."""
     positive_val = int(value)
     if not positive_val > 0:
         raise argparse.ArgumentTypeError("%s is an invalid positive int value" % value)
@@ -36,8 +35,10 @@ def positive_integer(value):
 def scholar_id_type(arg_value):
     pattern = r"[\w-]{12}"
     if not re.match(pattern, arg_value):
-        raise argparse.ArgumentTypeError("The Google Scholar ID is a string of 12 characters corresponding to "
-                                         "the value of the 'user' field in the URL of your profile.")
+        raise argparse.ArgumentTypeError(
+            "The Google Scholar ID is a string of 12 characters corresponding to "
+            "the value of the 'user' field in the URL of your profile."
+        )
     return arg_value
 
 
@@ -62,14 +63,17 @@ def query_yes_no(question, default="yes"):
         raise ValueError("invalid default answer: '%s'" % default)
 
     while True:
-        console.print(f"{question + prompt}", style="main_style", end='')
+        console.print(f"{question + prompt}", style="main_style", end="")
         choice = input().lower()
-        if default is not None and choice == '':
+        if default is not None and choice == "":
             return valid[default]
         elif choice in valid:
             return valid[choice]
         else:
-            console.print("\nPlease respond with 'yes' or 'no' (or 'y' or 'n').\n", style="error_style")
+            console.print(
+                "\nPlease respond with 'yes' or 'no' (or 'y' or 'n').\n",
+                style="error_style",
+            )
 
 
 def slugify(value, allow_unicode=False):
@@ -84,11 +88,15 @@ def slugify(value, allow_unicode=False):
     """
     value = str(value)
     if allow_unicode:
-        value = unicodedata.normalize('NFKC', value)
+        value = unicodedata.normalize("NFKC", value)
     else:
-        value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore').decode('ascii')
-    value = re.sub(r'[^\w\s-]', '', value).strip().lower()
-    return re.sub(r'[-\s]+', '-', value)
+        value = (
+            unicodedata.normalize("NFKD", value)
+            .encode("ascii", "ignore")
+            .decode("ascii")
+        )
+    value = re.sub(r"[^\w\s-]", "", value).strip().lower()
+    return re.sub(r"[-\s]+", "-", value)
 
 
 def create_directory(path):
@@ -101,9 +109,19 @@ def create_directory(path):
         try:
             os.makedirs(path)
         except Exception as e:
-            console.print(f"The syntax of the output file name, directory or volume is incorrect: '{path}'",
-                          style="error_style")
+            console.print(
+                f"The syntax of the output file name, directory or volume is incorrect: '{path}'",
+                style="error_style",
+            )
         else:
-            console.print(f'Created the output directory "{path}"', style="main_style", justify="center")
+            console.print(
+                f'Created the output directory "{path}"',
+                style="main_style",
+                justify="center",
+            )
     else:
-        console.print(f'The output directory "{path}" already exists', style="main_style", justify="center")
+        console.print(
+            f'The output directory "{path}" already exists',
+            style="main_style",
+            justify="center",
+        )

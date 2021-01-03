@@ -19,21 +19,20 @@ from utils import positive_integer, scholar_id_type
 
 
 def args_parser():
-    """ Argument Parser
-    """
+    """Argument Parser"""
     parser = argparse.ArgumentParser(
         description="Enter an author's Google Scholar ID to download all PDFs of his/her publications.\n"
                     "The downloaded PDFs will be saved in the format:\n\n"
                     "\t'./<scholar_id>/<year_publication>_<title_publication>.pdf'\n",
         epilog="",
-        formatter_class=argparse.RawTextHelpFormatter
+        formatter_class=argparse.RawTextHelpFormatter,
     )
 
     parser.add_argument(
         "scholar_id",
         type=scholar_id_type,
         help="the Google Scholar ID is a string of 12 characters corresponding to \n"
-             "the value of the 'user' field in the URL of your profile.\n"
+             "the value of the 'user' field in the URL of your profile.\n",
     )
 
     parser.add_argument(
@@ -41,7 +40,7 @@ def args_parser():
         "--verbose",
         action="store_true",
         help="if set, it shows a progress bar for each downloaded file, otherwise\n"
-             "it shows a single progress bar for all files.\n"
+             "it shows a single progress bar for all files.\n",
     )
 
     parser.add_argument(
@@ -49,7 +48,7 @@ def args_parser():
         "--num_workers",
         default=4,
         type=positive_integer,
-        help="number of workers (threads) used during downloads (DEFAULT 4).\n"
+        help="number of workers (threads) used during downloads (DEFAULT 4).\n",
     )
 
     return parser.parse_args()

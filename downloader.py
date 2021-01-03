@@ -50,7 +50,9 @@ def copy_url_requests(task_id: TaskID, url: str, path: str) -> int:
 
     response_code = 200
     try:
-        r = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'}, timeout=10, stream=True)
+        r = requests.get(
+            url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10, stream=True
+        )
 
         if r.status_code == requests.codes.ok:
 
@@ -93,7 +95,7 @@ def copy_url_urllib(task_id: TaskID, url: str, path: str) -> int:
     response_code = 200
     try:
         opener = build_opener(HTTPCookieProcessor())
-        req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        req = Request(url, headers={"User-Agent": "Mozilla/5.0"})
         response = opener.open(req, timeout=10)  # 10 seconds
 
         total = None
@@ -121,7 +123,9 @@ def copy_url_urllib(task_id: TaskID, url: str, path: str) -> int:
     return response_code
 
 
-def download(urls: List[str], dest_paths: List[str], max_workers: int = 4, verbose: bool = True) -> int:
+def download(
+        urls: List[str], dest_paths: List[str], max_workers: int = 4, verbose: bool = True
+) -> int:
     """Download multiple files to the given directory.
 
     NOTES:
@@ -129,7 +133,9 @@ def download(urls: List[str], dest_paths: List[str], max_workers: int = 4, verbo
     - https://docs.python.org/3/library/concurrent.futures.html#threadpoolexecutor-example
     """
 
-    assert len(urls) == len(dest_paths), "There must be as many destination paths as URLs to download"
+    assert len(urls) == len(
+        dest_paths
+    ), "There must be as many destination paths as URLs to download"
 
     downloaded_pubs = 0
 
@@ -144,11 +150,15 @@ def download(urls: List[str], dest_paths: List[str], max_workers: int = 4, verbo
                 assert dest_path, "Destination path cannot be None"
 
                 filename = os.path.basename(dest_path)
-                task_id = progress.add_task("download",
-                                            filename=f"{i}-" + ((filename[:50] + '..') if len(
-                                                filename) > 50 else filename),
-                                            start=False, visible=verbose)
-                future_to_url[executor.submit(copy_url_urllib, task_id, url, dest_path)] = url
+                task_id = progress.add_task(
+                    "download",
+                    filename=f"{i}-" + ((filename[:50] + "..") if len(filename) > 50 else filename),
+                    start=False,
+                    visible=verbose,
+                )
+                future_to_url[
+                    executor.submit(copy_url_urllib, task_id, url, dest_path)
+                ] = url
 
             urls_completed = concurrent.futures.as_completed(future_to_url)
 
@@ -163,7 +173,10 @@ def download(urls: List[str], dest_paths: List[str], max_workers: int = 4, verbo
                 try:
                     status = future.result()
                 except Exception as exc:
-                    console.print('%r generated the following exception: %s' % (url, exc), style="error_style")
+                    console.print(
+                        "%r generated the following exception: %s" % (url, exc),
+                        style="error_style",
+                    )
                 else:
                     if status == 200:
                         downloaded_pubs += 1

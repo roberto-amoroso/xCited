@@ -19,7 +19,11 @@ from rich.markdown import Markdown
 
 from argument_parser import args_parser
 from console_manager import console_output_setup, console
-from scholarly_manager import proxy_manager, download_publications_pdf, retrieve_publications_by_author_id
+from scholarly_manager import (
+    proxy_manager,
+    download_publications_pdf,
+    retrieve_publications_by_author_id,
+)
 from utils import ErrorFetchingAuthor
 
 
@@ -44,7 +48,9 @@ def main():
         filled_pubs = retrieve_publications_by_author_id(author_id)
 
         # - Download the PDFs of the author's publications
-        eprinted_pubs = download_publications_pdf(author_id, filled_pubs, max_workers=num_workers, verbose=verbose)
+        eprinted_pubs = download_publications_pdf(
+            author_id, filled_pubs, max_workers=num_workers, verbose=verbose
+        )
     except (KeyboardInterrupt, ErrorFetchingAuthor):
         pass
 
@@ -53,5 +59,5 @@ def main():
     sys.exit()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

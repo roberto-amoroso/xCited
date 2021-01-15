@@ -13,33 +13,13 @@ General Utils
 """
 #########################################################
 import os
-import sys
 import unicodedata
 import re
 from console_manager import console
-import argparse
 
 
 class ErrorFetchingAuthor(Exception):
     """Raise when errors occur while downloading author information"""
-
-
-def positive_integer(value):
-    """Check if the argument is a positive Integer."""
-    positive_val = int(value)
-    if not positive_val > 0:
-        raise argparse.ArgumentTypeError("%s is an invalid positive int value" % value)
-    return positive_val
-
-
-def scholar_id_type(arg_value):
-    pattern = r"[\w-]{12}"
-    if not re.match(pattern, arg_value):
-        raise argparse.ArgumentTypeError(
-            "The Google Scholar ID is a string of 12 characters corresponding to "
-            "the value of the 'user' field in the URL of your profile."
-        )
-    return arg_value
 
 
 def query_yes_no(question, default="yes"):
@@ -92,8 +72,8 @@ def slugify(value, allow_unicode=False):
     else:
         value = (
             unicodedata.normalize("NFKD", value)
-            .encode("ascii", "ignore")
-            .decode("ascii")
+                .encode("ascii", "ignore")
+                .decode("ascii")
         )
     value = re.sub(r"[^\w\s-]", "", value).strip().lower()
     return re.sub(r"[-\s]+", "-", value)

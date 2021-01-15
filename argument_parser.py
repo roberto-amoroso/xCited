@@ -14,8 +14,25 @@ Arguments parser
 #########################################################
 
 import argparse
+import re
 
-from utils import positive_integer, scholar_id_type
+
+def scholar_id_type(arg_value):
+    pattern = r"^[\w-]{12}$"
+    if not re.match(pattern, arg_value):
+        raise argparse.ArgumentTypeError(
+            "The Google Scholar ID is a string of 12 characters corresponding to "
+            "the value of the 'user' field in the URL of your profile."
+        )
+    return arg_value
+
+
+def positive_integer(value):
+    """Check if the argument is a positive Integer."""
+    positive_val = int(value)
+    if not positive_val > 0:
+        raise argparse.ArgumentTypeError("%s is an invalid positive int value" % value)
+    return positive_val
 
 
 def args_parser():
